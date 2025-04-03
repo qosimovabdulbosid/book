@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Kutubxona</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+        .book-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .book {
+            width: 250px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .book:hover {
+            transform: scale(1.05);
+        }
+        .book img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .form-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input, textarea, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 90%;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            width: 92%;
+            font-size: 16px;
+        }
+        .delete-button {
+            background: #dc3545;
+        }
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h2>Saytga kirish</h2>
+        <input type="password" id="accessCode" placeholder="Kod kiriting">
+        <button onclick="setAccessCode()">Kodni saqlash</button>
+        <button onclick="checkAccess()">Kirish</button>
+    </div>
+
+    <div class="container hidden" id="mainContent">
+        <h1>📚 Online Kutubxona</h1>
+        <div class="form-container">
+            <input type="text" id="bookTitle" placeholder="Kitob nomi" required>
+            <input type="text" id="bookAuthor" placeholder="Muallif" required>
+            <input type="number" id="bookYear" placeholder="Nashr yili" min="1000" max="2025" required>
+            <input type="text" id="bookPublisher" placeholder="Nashriyot">
+            <textarea id="bookDesc" placeholder="Tavsif"></textarea>
+            <input type="url" id="bookImage" placeholder="Rasm URL" required>
+            <input type="url" id="bookLink" placeholder="Kitob manzili" required>
+            <button onclick="addBook()">Kitob qo‘shish</button>
+        </div>
+        <div class="book-list" id="bookList"></div>
+    </div>
+
+    <script>
+        function setAccessCode() {
+            let newCode = document.getElementById("accessCode").value;
+            if (newCode.trim() !== "") {
+                localStorage.setItem("userAccessCode", newCode);
+                alert("Kod saqlandi! Endi ushbu kod bilan kirishingiz mumkin.");
+            } else {
+                alert("Kod bo‘sh bo‘lishi mumkin emas!");
+            }
+        }
+
+        function checkAccess() {
+            let enteredCode = document.getElementById("accessCode").value;
+            let savedCode = localStorage.getItem("userAccessCode");
+            if (enteredCode === savedCode && savedCode !== null) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("mainContent").classList.remove("hidden");
+            } else {
+                alert("Noto‘g‘ri kod!");
+            }
+        }
+
+        function addBook() {
+            let title = document.getElementById("bookTitle").value.trim();
+            let author = document.getElementById("bookAuthor").value.trim();
+            let year = document.getElementById("bookYear").value.trim();
+            let publisher = document.getElementById("bookPublisher").value.trim();
+            let desc = document.getElementById("bookDesc").value.trim();
+            let image = document.getElementById("bookImage").value.trim();
+            let link = document.getElementById("bookLink").value.trim();
+            
+            if (!title || !author || !year || !image || !link) {
+                alert("Majburiy maydonlarni to‘ldiring!");
+                return;
+            }
+            
+            let book = { title, author, year, publisher, desc, image, link };
+            let books = JSON.parse(localStorage.getItem("books")) || [];
+            books.push(book);
+            localStorage.setItem("books", JSON.stringify(books));
+            loadBooks();
+            document.querySelectorAll("input, textarea").forEach(input => input.value = "");
+        }
+
+        function deleteBook(index) {
+            let books = JSON.parse(localStorage.getItem("books")) || [];
+            books.splice(index, 1);
+            localStorage.setItem("books", JSON.stringify(books));
+            loadBooks();
+        }
+
+        function loadBooks() {
+            let books = JSON.parse(localStorage.getItem("books")) || [];
+            let bookList = document.getElementById("bookList");
+            bookList.innerHTML = "";
+
+            books.forEach((book, index) => {
+                let bookDiv = document.createElement("div");
+                bookDiv.classList.add("book");
+                bookDiv.innerHTML = `
+                    <img src="${book.image}" alt="Kitob rasmi">
+                    <h3>${book.title}</h3>
+                    <p><strong>Muallif:</strong> ${book.author}</p>
+                    <p><strong>Nashr yili:</strong> ${book.year}</p>
+                    <p><strong>Nashriyot:</strong> ${book.publisher}</p>
+                    <p>${book.desc}</p>
+                    <button onclick="window.open('${book.link}', '_blank')">Ko‘rish</button>
+                    <button class="delete-button" onclick="deleteBook(${index})">O‘chirish</button>
+                `;
+                bookList.appendChild(bookDiv);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadBooks);
+    </script>
+</body>
+</html>
